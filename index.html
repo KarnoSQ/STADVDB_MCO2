@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concurrency Control Simulation</title>
+  <script>
+    async function simulateCase1() {
+      const response = await fetch('http://localhost:3000/case1');
+      const data = await response.json();
+      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function simulateCase2() {
+      const response = await fetch('http://localhost:3000/case2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newValue: 'New Value' })
+      });
+      const data = await response.json();
+      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function simulateCase3() {
+      const response = await fetch('http://localhost:3000/case3', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value1: 'Value 1', value2: 'Value 2' })
+      });
+      const data = await response.json();
+      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</head>
+<body>
+  <h1>Concurrency Control Simulation</h1>
+  <button onclick="simulateCase1()">Simulate Case 1</button>
+  <button onclick="simulateCase2()">Simulate Case 2</button>
+  <button onclick="simulateCase3()">Simulate Case 3</button>
+  <pre id="output"></pre>
+</body>
+</html>
