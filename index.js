@@ -54,7 +54,6 @@ app.get('/case1', async (req, res) => {
 
 app.post('/case2', async (req, res) => {
     try {
-        // First transaction on Node 1
         const transaction1 = async () => {
           const connection = await node1.getConnection();
           await connection.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
@@ -67,8 +66,7 @@ app.post('/case2', async (req, res) => {
           connection.release();
           return readResult;
         };
-    
-        // Second transaction on Node 2
+
         const transaction2 = async () => {
           const connection2 = await node2.getConnection();
           await connection2.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
@@ -81,8 +79,6 @@ app.post('/case2', async (req, res) => {
           connection2.release();
           return node2Data;
         };
-    
-        // Run transactions in parallel
         const [node1Result, node2Result] = await Promise.all([transaction1(), transaction2()]);
     
         res.json({
@@ -98,7 +94,6 @@ app.post('/case2', async (req, res) => {
 
 app.post('/case3', async (req, res) => {
     try {
-        // First write transaction on Node 1
         const write1 = async () => {
           const connection1 = await node1.getConnection();
           await connection1.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
@@ -109,7 +104,6 @@ app.post('/case3', async (req, res) => {
           connection1.release();
         };
     
-        // Second write transaction on Node 2
         const write2 = async () => {
           const connection2 = await node2.getConnection();
           await connection2.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
@@ -120,7 +114,6 @@ app.post('/case3', async (req, res) => {
           connection2.release();
         };
     
-        // Execute both write transactions in parallel
         await Promise.all([write1(), write2()]);
     
         res.json({
