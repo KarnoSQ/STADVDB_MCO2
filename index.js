@@ -30,8 +30,16 @@ var node3 = mysql.createPool({
 
 app.get('/case1', async (req, res) => {
   try {
-    const [node1Data] = await node1.query('SELECT * FROM Games_Details WHERE appID = 20200');
-    const [node2Data] = await node2.query('SELECT * FROM Games_Details WHERE appID = 20200');
+
+    const connection1 = await node1.getConnection();
+    const connection2 = await node2.getConnection();
+    
+    await connection1.query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+    await connection2.query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+
+    const [node1Data] = await connection1.query('SELECT * FROM Games_Details WHERE appID = 20200');
+    const [node2Data] = await connection2.query('SELECT * FROM Games_Details WHERE appID = 20200');
+    
 
     res.json({
       case: 'Concurrent Reads',
@@ -46,6 +54,7 @@ app.get('/case1', async (req, res) => {
 app.post('/case2', async (req, res) => {
   try {
     const connection = await node1.getConnection();
+    await connection.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     await connection.beginTransaction();
 
     await connection.query('UPDATE Games_Details SET price = 30 WHERE appID = 20200');
@@ -57,11 +66,12 @@ app.post('/case2', async (req, res) => {
     connection.release();
 
     const connection2 = await node2.getConnection();
+    await connection2.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     await connection2.beginTransaction();
 
     await connection2.query('UPDATE Games_Details SET price = 50.00 WHERE appID = 20200');
     await connection2.commit();
-    
+
     const [node2Data] = await node2.query('SELECT * FROM Games_Details WHERE appID = 20200');
     connection2.release();
 
@@ -83,6 +93,9 @@ app.post('/case3', async (req, res) => {
   try {
     const connection1 = await node1.getConnection();
     const connection2 = await node2.getConnection();
+
+    await connection1.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+    await connection2.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
 
     await connection1.beginTransaction();
     await connection2.beginTransaction();
