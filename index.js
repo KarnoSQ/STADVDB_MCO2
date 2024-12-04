@@ -37,9 +37,10 @@ app.get('/case1', async (req, res) => {
     await connection1.query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
     await connection2.query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
 
-    const [node1Data] = await connection1.query('SELECT * FROM Games_Details WHERE appID = 20200');
-    const [node2Data] = await connection2.query('SELECT * FROM Games_Details WHERE appID = 20200');
+    const [node1Read] = await connection1.query('SELECT * FROM Games_Details WHERE appID = 20200');
+    const [node2Read] = await connection2.query('SELECT * FROM Games_Details WHERE appID = 20200');
     
+    const [node1Data, node2Data] = await Promise.all([node1Read, node2Read]);
 
     res.json({
       case: 'Concurrent Reads',
@@ -52,71 +53,83 @@ app.get('/case1', async (req, res) => {
 });
 
 app.post('/case2', async (req, res) => {
-  try {
-    const connection = await node1.getConnection();
-    await connection.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-    await connection.beginTransaction();
-
-    await connection.query('UPDATE Games_Details SET price = 30 WHERE appID = 20200');
-    await connection.commit();
-
-    const [readResult] = await node1.query('SELECT * FROM Games_Details WHERE appID = 20200');
+    try {
+        // First transaction on Node 1
+        const transaction1 = async () => {
+          const connection = await node1.getConnection();
+          await connection.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+          await connection.beginTransaction();
     
-
-    connection.release();
-
-    const connection2 = await node2.getConnection();
-    await connection2.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-    await connection2.beginTransaction();
-
-    await connection2.query('UPDATE Games_Details SET price = 50.00 WHERE appID = 20200');
-    await connection2.commit();
-
-    const [node2Data] = await node2.query('SELECT * FROM Games_Details WHERE appID = 20200');
-    connection2.release();
-
-    res.json({
-      case: 'Read and Write',
-      write: 'Write completed',
-      node1: readResult,
-      node2: node2Data
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+          await connection.query('UPDATE Games_Details SET price = 30 WHERE appID = 20200');
+          await connection.commit();
+    
+          const [readResult] = await connection.query('SELECT * FROM Games_Details WHERE appID = 20200');
+          connection.release();
+          return readResult;
+        };
+    
+        // Second transaction on Node 2
+        const transaction2 = async () => {
+          const connection2 = await node2.getConnection();
+          await connection2.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+          await connection2.beginTransaction();
+    
+          await connection2.query('UPDATE Games_Details SET price = 50.00 WHERE appID = 20200');
+          await connection2.commit();
+    
+          const [node2Data] = await connection2.query('SELECT * FROM Games_Details WHERE appID = 20200');
+          connection2.release();
+          return node2Data;
+        };
+    
+        // Run transactions in parallel
+        const [node1Result, node2Result] = await Promise.all([transaction1(), transaction2()]);
+    
+        res.json({
+          case: 'Read and Write (Parallel)',
+          node1: node1Result,
+          node2: node2Result,
+        });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
 });
 
 
 app.post('/case3', async (req, res) => {
-  const { value1 } = 20.00;
-
-  try {
-    const connection1 = await node1.getConnection();
-    const connection2 = await node2.getConnection();
-
-    await connection1.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-    await connection2.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
-
-    await connection1.beginTransaction();
-    await connection2.beginTransaction();
-
- 
-    await connection1.query('UPDATE Games_Details SET price = 20.00 WHERE appID = 20200');
-    await connection2.query('UPDATE Games_Details SET price = 20.00 WHERE appID = 20200');
-
-    await connection1.commit();
-    await connection2.commit();
-
-    connection1.release();
-    connection2.release();
-
-    res.json({
-      case: 'Concurrent Writes',
-      message: 'Both writes completed'
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    try {
+        // First write transaction on Node 1
+        const write1 = async () => {
+          const connection1 = await node1.getConnection();
+          await connection1.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+          await connection1.beginTransaction();
+    
+          await connection1.query('UPDATE Games_Details SET price = 20.00 WHERE appID = 20200');
+          await connection1.commit();
+          connection1.release();
+        };
+    
+        // Second write transaction on Node 2
+        const write2 = async () => {
+          const connection2 = await node2.getConnection();
+          await connection2.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+          await connection2.beginTransaction();
+    
+          await connection2.query('UPDATE Games_Details SET price = 20.00 WHERE appID = 20200');
+          await connection2.commit();
+          connection2.release();
+        };
+    
+        // Execute both write transactions in parallel
+        await Promise.all([write1(), write2()]);
+    
+        res.json({
+          case: 'Concurrent Writes (Parallel)',
+          message: 'Both writes completed successfully',
+        });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
 });
 
 const WAL = [];
