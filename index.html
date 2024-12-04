@@ -4,31 +4,91 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Concurrency Control Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #message {
+      margin-top: 10px; 
+      font-weight: bold; 
+      color: green
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
   <script>
-    async function simulateCase1() {
-      const response = await fetch('http://localhost:3000/case1');
+    async function fetchData(url, method = 'GET', body = null) {
+      const options = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) options.body = JSON.stringify(body);
+
+      const response = await fetch(url, options);
       const data = await response.json();
-      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+      return data;
+    }
+
+    function displayTable(data, caseName, message) {
+      const outputDiv = document.getElementById('output');
+      const messageDiv = document.getElementById('message');
+      outputDiv.innerHTML = `<h2>${caseName}</h2>`;
+      messageDiv.textContent = message;
+
+      for (const [key, rows] of Object.entries(data)) {
+        if (!Array.isArray(rows)) continue;
+
+        const table = document.createElement('table');
+        const headerRow = document.createElement('tr');
+
+        // Create table headers
+        const headers = Object.keys(rows[0] || {});
+        headers.forEach(header => {
+          const th = document.createElement('th');
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        // Create table rows
+        rows.forEach(row => {
+          const rowElement = document.createElement('tr');
+          headers.forEach(header => {
+            const td = document.createElement('td');
+            td.textContent = row[header] || '';
+            rowElement.appendChild(td);
+          });
+          table.appendChild(rowElement);
+        });
+
+        outputDiv.appendChild(table);
+      }
+    }
+
+    async function simulateCase1() {
+      const data = await fetchData('http://localhost:3000/case1');
+      displayTable(data, 'Simulate Case 1', 'Concurrent Read in Two Nodes Complete');
     }
 
     async function simulateCase2() {
-      const response = await fetch('http://localhost:3000/case2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newValue: 'New Value' })
-      });
-      const data = await response.json();
-      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+      const data = await fetchData('http://localhost:3000/case2', 'POST', { newValue: 'New Value' });
+      displayTable(data, 'Simulate Case 2', 'Concurrent Write and Read in at least One Node Complete');
     }
 
     async function simulateCase3() {
-      const response = await fetch('http://localhost:3000/case3', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value1: 'Value 1', value2: 'Value 2' })
-      });
-      const data = await response.json();
-      document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+      const data = await fetchData('http://localhost:3000/case3', 'POST', { value1: 'Value 1', value2: 'Value 2' });
+      displayTable(data, 'Simulate Case 3', 'Concurrent Write in Two Nodes Complete');
     }
   </script>
 </head>
@@ -37,7 +97,8 @@
   <button onclick="simulateCase1()">Simulate Case 1</button>
   <button onclick="simulateCase2()">Simulate Case 2</button>
   <button onclick="simulateCase3()">Simulate Case 3</button>
-  <pre id="output"></pre>
+  <div id="message"></div>
+  <div id="output"></div>
   <a href="/website">Recovery Strategy Simulation</a>
 </body>
 </html>
