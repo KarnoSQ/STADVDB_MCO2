@@ -6,28 +6,89 @@
   <title>Concurrency Control Simulation</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #e0eafc, #cfdef3);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    h1 {
+      margin: 20px 0;
+      color: #00509e;
+      font-size: 2.5em;
+      text-align: center;
+    }
+
+    button {
+      background-color: #00509e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      margin: 10px 5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #003f7d;
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+
     #message {
-      margin-top: 10px; 
-      font-weight: bold; 
-      color: green
+      margin-top: 10px;
+      font-weight: bold;
+      color: green;
     }
+
+    #output {
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
       margin-top: 20px;
     }
+
     table, th, td {
-      border: 1px solid black;
+      border: 1px solid #ddd;
     }
+
     th, td {
-      padding: 8px;
+      padding: 12px;
       text-align: left;
     }
+
     th {
-      background-color: #f2f2f2;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    a {
+      color: #00509e;
+      text-decoration: none;
+      margin-top: 20px;
+      display: inline-block;
+      font-size: 1em;
+      transition: color 0.3s;
+    }
+
+    a:hover {
+      color: #003f7d;
     }
   </style>
   <script>
@@ -52,7 +113,6 @@
         const table = document.createElement('table');
         const headerRow = document.createElement('tr');
 
-        // Create table headers
         const headers = Object.keys(rows[0] || {});
         headers.forEach(header => {
           const th = document.createElement('th');
@@ -61,7 +121,6 @@
         });
         table.appendChild(headerRow);
 
-        // Create table rows
         rows.forEach(row => {
           const rowElement = document.createElement('tr');
           headers.forEach(header => {
