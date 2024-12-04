@@ -3,9 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STEAMGAMES</title>
+    <title>Recovery Strategy Simulation</title>
+    <script>
+        async function simulateCase1() {
+            try {
+                const response = await fetch('http://localhost:3000/rcase1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function simulateCase2() {
+            try {
+                const response = await fetch('http://localhost:3000/rcase2', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        // Function to simulate recovery case #3
+        async function simulateCase3() {
+            try {
+                const response = await fetch('http://localhost:3000/rcase3', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function simulateCase4() {
+            try {
+                const response = await fetch('http://localhost:3000/rcase4', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function triggerRecovery() {
+            try {
+                const response = await fetch('http://localhost:3000/recover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
 </head>
 <body>
-    
+    <h1>Recovery Strategy Simulation</h1>
+    <button onclick="simulatecase1()">Case 1</button>
+    <button onclick="simulatecase2()">Case 2</button>
+    <button onclick="simulatecase3()">Case 3</button>
+    <button onclick="simulatecase4()">Case 4</button>
+    <button onclick="triggerRecovery()">Recovery</button>
+    <pre id="output"></pre>
+    <a href="/">Concurency Control Simulation</a>
 </body>
 </html>
